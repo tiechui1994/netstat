@@ -26,13 +26,17 @@ jobs:
 
       - name: Install cross toolchain
         run: |
-          sudo apt-get update
+          sudo apt-get update && sudo apt-get install -y wget tar upx
           if [ "$PLATFORM" = "amd64" ]; then
             sudo apt-get install -y build-essential
           elif [ "$PLATFORM" = "arm64" ]; then
-            sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
+            wget https://musl.cc/aarch64-linux-musl-cross.tgz
+            sudo tar -xzf aarch64-linux-musl-cross.tgz -C /usr/local
+            export PATH="/usr/local/aarch64-linux-musl-cross/bin:$PATH"
           else
-            sudo apt-get install -y gcc-arm-linux-gnueabi binutils-arm-linux-gnueabi
+            wget https://musl.cc/arm-linux-musleabi-cross.tgz
+            sudo tar -xzf arm-linux-musleabi-cross.tgz -C /usr/local
+            export PATH="/usr/local/arm-linux-musleabi-cross/bin:$PATH"
           fi
 
       - name: Build
@@ -42,9 +46,9 @@ jobs:
           if [ "$PLATFORM" = "amd64" ]; then
             make amd64
           elif [ "$PLATFORM" = "arm64" ]; then
-            make arm64
+            make arm64 && upx build/traffic_monitor_arm64
           else
-            make arm7
+            make arm7 && upx build/traffic_monitor_arm7
           fi
 
       - name: Upload build artifacts
